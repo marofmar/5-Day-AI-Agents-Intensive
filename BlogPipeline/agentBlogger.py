@@ -1,27 +1,24 @@
 from dotenv import load_dotenv
 import os
-from pathlib import Path
 import asyncio
+from pathlib import Path
+from google.adk.agents import Agent, SequentialAgent, ParallelAgent, LoopAgent
+from google.adk.runners import InMemoryRunner
+from google.adk.tools import AgentTool, FunctionTool, google_search
+from google.genai import types
 
-def setup_gemini_api_key():
-    env_path = Path('.') / '.env'
-    load_dotenv(dotenv_path=env_path)
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
 
-    # reference: https://stackoverflow.com/questions/16924471/difference-between-os-getenv-and-os-environ-get
-    try:
-        api_key = os.environ["GOOGLE_API_KEY"]
-        os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "FALSE"
-        print("✅ Gemini API key setup complete.")
-    except Exception as e:
-        print(f"🔑 Authentication Error: Please make sure you have added 'GOOGLE_API_KEY' in .env file. Details: {e}")
-    return api_key
+# reference: https://stackoverflow.com/questions/16924471/difference-between-os-getenv-and-os-environ-get
+try:
+    api_key = os.environ["GOOGLE_API_KEY"]
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "FALSE"
+    print("✅ Gemini API key setup complete.")
+except Exception as e:
+    print(f"🔑 Authentication Error: Please make sure you have added 'GOOGLE_API_KEY' in .env file. Details: {e}")
 
-def setup_adk():
-    from google.adk.agents import Agent, SequentialAgent, ParallelAgent, LoopAgent
-    from google.adk.runners import InMemoryRunner
-    from google.adk.tools import AgentTool, FunctionTool, google_search
-    from google.genai import types
-    print("✅ ADK components imported successfully.")
+
 
 def create_research_agent():
     research_agent = Agent(
@@ -59,7 +56,7 @@ def create_root_agent(research_agent, summarizer_agent):
         instruction="""You are a research coordinator. Your goal is to answer the user's query by orchestrating a workflow.
         1. First, you MUST call the `ResearchAgent` tool to find relevant information on the topic provided by the user.
         2. Next, after receiving the reserach findings, you MUST call the `SummarizerAgent` tool to create a concise summary.
-        3. Finally, present the final summary claerly to the user as your response in Korean with proper citations.""",
+        3. Finally, present the final summary claerly to the user as your response in Korean.""",
         tools=[
             AgentTool(research_agent),
             AgentTool(summarizer_agent)
@@ -69,18 +66,25 @@ def create_root_agent(research_agent, summarizer_agent):
     return root_agent
 
 
-if __name__ == "__main__":
-    setup_gemini_api_key()
-    setup_adk()
-
+async def main(user_query):
     research_agent = create_research_agent()
     summarizer_agent = create_summarizer_agent()
     root_agent = create_root_agent(research_agent, summarizer_agent)
 
     runner = InMemoryRunner(agent=root_agent)
-    async def main():
-        response = await runner.run_debug("What are the latest advancements in sns user tracking technologies?")
-        print("\n📝 Final Response:\n", response)
 
-    asyncio.run(main())
-    print("\n📝 Final Response:\n", response)
+    print(f"🤖 Running the agent for the query...")
+    response = await runner.run_debug(user_query)
+
+    print("\n📝 Final Response:\n")
+    print(response)
+    return response
+
+
+if __name__ == "__main__":
+
+
+    
+    user_query = input("Enter your research topic: ")
+
+    asyncio.run(main(user_query))
