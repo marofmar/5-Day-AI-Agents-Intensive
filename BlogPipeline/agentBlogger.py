@@ -77,7 +77,7 @@ async def main(user_query):
     response = await runner.run_debug(user_query)
 
     print("\n📝 Final Response:\n")
-    print(response)
+    #print(response)
     return response
 
 
