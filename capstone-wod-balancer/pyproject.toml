@@ -1,0 +1,13 @@
+[project]
+name = "capstone-wod-balancer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk>=1.19.0",
+    "google-genai>=1.52.0",
+    "python-dotenv>=1.0.0",
+    "markdown>=3.5.0",
+    "xhtml2pdf>=0.2.15",
+]
